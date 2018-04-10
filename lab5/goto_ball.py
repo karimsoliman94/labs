@@ -10,6 +10,8 @@ sys.path.insert(0, '../lab4')
 import find_ball
 
 import cozmo
+from cozmo.util import degrees
+import time
 
 try:
     from PIL import ImageDraw, ImageFont
@@ -49,7 +51,6 @@ class BallAnnotator(cozmo.annotate.Annotator):
 
             BallAnnotator.ball = None
 
-
 async def run(robot: cozmo.robot.Robot):
     '''The run method runs once the Cozmo SDK is connected.'''
 
@@ -59,7 +60,10 @@ async def run(robot: cozmo.robot.Robot):
 
 
     try:
-
+        stopped = False
+        count = 0
+        await robot.set_lift_height(0).wait_for_completed()
+        await robot.set_head_angle(degrees(0)).wait_for_completed()
         while True:
             #get camera image
             event = await robot.world.wait_for(cozmo.camera.EvtNewRawCameraImage, timeout=30)
@@ -74,6 +78,38 @@ async def run(robot: cozmo.robot.Robot):
             BallAnnotator.ball = ball
 
             ## TODO: ENTER YOUR SOLUTION HERE
+            #we will say we are near the ball when ball is over 50% of the screen
+            if stopped is True:
+                print("we done fam")
+                await robot.say_text("I found the ball").wait_for_completed()
+                await robot.drive_wheels(20, 20)
+                time.sleep(2.5)
+                await robot.drive_wheels(0,0)
+                await robot.set_lift_height(0.75).wait_for_completed()
+                await robot.set_lift_height(0).wait_for_completed()
+                return
+            else:
+                if ball is not None:
+                    area = ball[2]*ball[2]*3.14
+                    height,width = opencv_image.shape
+                    ratio = (area/(height*width))*100
+                    print(ratio)
+                    if ratio > 35:#we are close to ball
+                        motor_left = 0
+                        motor_right = 0
+                        stopped=True
+                    else:
+                        ballcenter = ball[0]
+                        motor_right = (width-ballcenter)/4
+                        motor_left = ballcenter/4
+                else:
+                    motor_right = 30
+                    motor_left = 40
+                print("motor_right: " + str(motor_right))
+                print("motor_left: " + str(motor_left))
+
+                # Send commands to the robot
+                await robot.drive_wheels(motor_left, motor_right)
 
 
     except KeyboardInterrupt:
