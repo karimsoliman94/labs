@@ -80,7 +80,6 @@ async def run(robot: cozmo.robot.Robot):
             ## TODO: ENTER YOUR SOLUTION HERE
             #we will say we are near the ball when ball is over 50% of the screen
             if stopped is True:
-                print("we done fam")
                 await robot.say_text("I found the ball").wait_for_completed()
                 await robot.drive_wheels(20, 20)
                 time.sleep(2.5)
