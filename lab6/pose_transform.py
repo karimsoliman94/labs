@@ -16,7 +16,22 @@ def get_relative_pose(object_pose, refrence_frame_pose):
 	# Try to derive the equations yourself and verify by looking at
 	# the books or slides bfore implementing.
 	# ####
-	return None
+
+	objectx,objecty,objectz = object_pose.position.x_y_z
+	objectAngle = object_pose.rotation.angle_z
+
+	refrence_framex, refrence_framey, refrence_framez = refrence_frame_pose.position.x_y_z
+	refrence_frameAngle = refrence_frame_pose.rotation.angle_z
+
+	sinObjAngle = numpy.sin(objectAngle.radians)
+	cosObjAngle = numpy.cos(objectAngle.radians)
+
+	newx = objectx + (cosObjAngle * refrence_framex) - (sinObjAngle * refrence_framey)
+	newy = objecty + (sinObjAngle * refrence_framex) + (cosObjAngle * refrence_framey)
+	newz = objectz + refrence_framez
+	newAngle = objectAngle + refrence_frameAngle
+
+	return cozmo.util.Pose(newx,newy,newz,angle_z=newAngle,origin_id = object_pose._origin_id)
 
 def find_relative_cube_pose(robot: cozmo.robot.Robot):
 	'''Looks for a cube while sitting still, prints the pose of the detected cube
